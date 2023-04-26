@@ -46,3 +46,27 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('core.index'))
+
+
+@users.route('/account', methods=['GET', 'POST'])
+@login_required
+def account():
+
+    form = UpdateUserForm()
+    if form.validate_on_submit():
+
+        if form.picture.data:
+            username = current_user.username
+            pic = add_profile_pic(form.picture.data, username)
+            current_user.profile_image = pic
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        db.session.commit()
+        return redirect(url_for('users.account'))
+
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+
+    profile_image = url_for('static', filename='profile_pics/'+current_user.profile_image)
+    return render_template('account.html', profile_image=profile_image, form=form)
